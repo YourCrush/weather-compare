@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://YOUR_USERNAME.github.io/weather-comparison-app/sitemap.xml
+
+# Disallow crawling of API endpoints or sensitive paths
+Disallow: /api/
+Disallow: /*.json$
+
+# Allow crawling of main application
+Allow: /
+Allow: /assets/
+Allow: /*.css$
+Allow: /*.js$

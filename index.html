@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <!-- Primary Meta Tags -->
+  <title>Weather Comparison App - Compare Weather Across Multiple Locations</title>
+  <meta name="title" content="Weather Comparison App - Compare Weather Across Multiple Locations" />
+  <meta name="description" content="Compare real-time weather conditions, forecasts, and historical data across multiple locations. Features interactive charts, seasonal analysis, and detailed weather insights." />
+  <meta name="keywords" content="weather, comparison, forecast, climate, temperature, precipitation, weather app, meteorology" />
+  <meta name="author" content="Weather Comparison Team" />
+  <meta name="robots" content="index, follow" />
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://YOUR_USERNAME.github.io/weather-comparison-app/" />
+  <meta property="og:title" content="Weather Comparison App - Compare Weather Across Multiple Locations" />
+  <meta property="og:description" content="Compare real-time weather conditions, forecasts, and historical data across multiple locations. Features interactive charts, seasonal analysis, and detailed weather insights." />
+  <meta property="og:image" content="https://YOUR_USERNAME.github.io/weather-comparison-app/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:site_name" content="Weather Comparison App" />
+  
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://YOUR_USERNAME.github.io/weather-comparison-app/" />
+  <meta property="twitter:title" content="Weather Comparison App - Compare Weather Across Multiple Locations" />
+  <meta property="twitter:description" content="Compare real-time weather conditions, forecasts, and historical data across multiple locations. Features interactive charts, seasonal analysis, and detailed weather insights." />
+  <meta property="twitter:image" content="https://YOUR_USERNAME.github.io/weather-comparison-app/og-image.png" />
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  
+  <!-- Theme Color -->
+  <meta name="theme-color" content="#3B82F6" />
+  <meta name="msapplication-TileColor" content="#3B82F6" />
+  
+  <!-- Security Headers -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.open-meteo.com https://geocoding-api.open-meteo.com;" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta http-equiv="X-Frame-Options" content="DENY" />
+  <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+  
+  <!-- Preconnect to external domains -->
+  <link rel="preconnect" href="https://api.open-meteo.com" />
+  <link rel="preconnect" href="https://geocoding-api.open-meteo.com" />
+  
+  <!-- DNS Prefetch -->
+  <link rel="dns-prefetch" href="https://api.open-meteo.com" />
+  <link rel="dns-prefetch" href="https://geocoding-api.open-meteo.com" />
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://YOUR_USERNAME.github.io/weather-comparison-app/" />
+  
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Weather Comparison App",
+    "description": "Compare real-time weather conditions, forecasts, and historical data across multiple locations",
+    "url": "https://YOUR_USERNAME.github.io/weather-comparison-app/",
+    "applicationCategory": "Weather",
+    "operatingSystem": "Web Browser",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "author": {
+      "@type": "Organization",
+      "name": "Weather Comparison Team"
+    },
+    "screenshot": "https://YOUR_USERNAME.github.io/weather-comparison-app/screenshot.png"
+  }
+  </script>
+  
+  <!-- Critical CSS (inlined for performance) -->
+  <style>
+    /* Critical above-the-fold styles */
+    html {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.5;
+      -webkit-text-size-adjust: 100%;
+      -moz-tab-size: 4;
+      tab-size: 4;
+    }
+    
+    body {
+      margin: 0;
+      background-color: #f9fafb;
+      color: #111827;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: #111827;
+        color: #f9fafb;
+      }
+    }
+    
+    /* Loading spinner */
+    .loading-spinner {
+      display: inline-block;
+      width: 2rem;
+      height: 2rem;
+      border: 3px solid #e5e7eb;
+      border-radius: 50%;
+      border-top-color: #3b82f6;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Skip to main content link */
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 6px;
+      background: #3b82f6;
+      color: white;
+      padding: 8px;
+      text-decoration: none;
+      border-radius: 4px;
+      z-index: 1000;
+    }
+    
+    .skip-link:focus {
+      top: 6px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Skip to main content for accessibility -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  
+  <!-- App root -->
+  <div id="root">
+    <!-- Loading fallback -->
+    <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; flex-direction: column;">
+      <div class="loading-spinner"></div>
+      <p style="margin-top: 1rem; color: #6b7280;">Loading Weather Comparison App...</p>
+      <noscript>
+        <div style="margin-top: 2rem; padding: 1rem; background: #fef2f2; border: 1px solid #fecaca; border-radius: 0.5rem; max-width: 400px; text-align: center;">
+          <h2 style="color: #dc2626; margin: 0 0 0.5rem 0;">JavaScript Required</h2>
+          <p style="color: #7f1d1d; margin: 0;">This application requires JavaScript to function properly. Please enable JavaScript in your browser settings.</p>
+        </div>
+      </noscript>
+    </div>
+  </div>
+  
+  <!-- Main application script -->
+  <script type="module" src="/src/main.tsx"></script>
+  
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator && 'production' === 'production') {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((registration) => {
+            console.log('SW registered: ', registration);
+          })
+          .catch((registrationError) => {
+            console.log('SW registration failed: ', registrationError);
+          });
+      });
+    }
+  </script>
+  
+  <!-- Performance monitoring -->
+  <script>
+    // Mark navigation start
+    if (window.performance && window.performance.mark) {
+      window.performance.mark('navigation-start');
+    }
+    
+    // Report loading performance
+    window.addEventListener('load', () => {
+      if (window.performance && window.performance.mark) {
+        window.performance.mark('page-loaded');
+        
+        // Measure page load time
+        const loadTime = performance.now();
+        console.log(`Page loaded in ${loadTime.toFixed(2)}ms`);
+        
+        // Report to analytics if available
+        if (typeof gtag !== 'undefined') {
+          gtag('event', 'page_load_time', {
+            event_category: 'Performance',
+            value: Math.round(loadTime)
+          });
+        }
+      }
+    });
+  </script>
+</body>
+</html>

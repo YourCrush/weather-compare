@@ -1,0 +1,33 @@
+# GitHub Pages configuration
+# This file is used by GitHub Pages to configure Jekyll processing
+
+# Disable Jekyll processing since we're using Vite
+plugins: []
+markdown: kramdown
+highlighter: rouge
+
+# Site metadata
+title: Weather Comparison App
+description: A comprehensive weather comparison application
+author: Weather Comparison Team
+url: https://YOUR_USERNAME.github.io
+baseurl: /weather-comparison-app
+
+# Build settings
+exclude:
+  - node_modules/
+  - src/
+  - scripts/
+  - "*.config.*"
+  - package*.json
+  - README.md
+  - .github/
+  - .gitignore
+  - .eslintrc.*
+  - .prettierrc.*
+  - tsconfig.json
+  - vite.config.ts
+
+# Include specific files
+include:
+  - .nojekyll
