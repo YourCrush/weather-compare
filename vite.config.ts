@@ -11,7 +11,7 @@ export default defineConfig(({ command, mode }) => {
     plugins: [react()],
     
     // Base URL for GitHub Pages deployment
-    base: isGitHubPages ? '/weather-comparison-app/' : '/',
+    base: isGitHubPages ? '/weather-compare/' : '/',
     
     // Build configuration
     build: {

@@ -10,8 +10,8 @@ highlighter: rouge
 title: Weather Comparison App
 description: A comprehensive weather comparison application
 author: Weather Comparison Team
-url: https://YOUR_USERNAME.github.io
-baseurl: /weather-comparison-app
+url: https://YourCrush.github.io
+baseurl: /weather-compare
 
 # Build settings
 exclude:

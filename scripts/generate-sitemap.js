@@ -7,7 +7,7 @@
 import { writeFileSync } from 'fs';
 import { resolve } from 'path';
 
-const baseUrl = 'https://YOUR_USERNAME.github.io/weather-comparison-app';
+const baseUrl = 'https://YourCrush.github.io/weather-compare';
 const currentDate = new Date().toISOString().split('T')[0];
 
 // Define the routes in the application
