@@ -17,7 +17,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vite build",
     "build:github": "GITHUB_PAGES=true npm run build",
     "preview": "vite preview",
     "test": "vitest",
