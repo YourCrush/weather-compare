@@ -29,21 +29,18 @@
   <meta property="twitter:description" content="Compare real-time weather conditions, forecasts, and historical data across multiple locations. Features interactive charts, seasonal analysis, and detailed weather insights." />
   <meta property="twitter:image" content="https://YourCrush.github.io/weather-compare/og-image.png" />
   
-  <!-- Favicon -->
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-  <link rel="manifest" href="/site.webmanifest" />
+  <!-- Favicon (simplified for GitHub Pages) -->
+  <link rel="icon" type="image/svg+xml" href="/weather-compare/favicon.svg" />
+  <!-- Manifest disabled for now -->
+  <!-- <link rel="manifest" href="/weather-compare/site.webmanifest" /> -->
   
   <!-- Theme Color -->
   <meta name="theme-color" content="#3B82F6" />
   <meta name="msapplication-TileColor" content="#3B82F6" />
   
-  <!-- Security Headers -->
+  <!-- Security Headers (removed X-Frame-Options as it can't be set via meta tag) -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.open-meteo.com https://geocoding-api.open-meteo.com;" />
   <meta http-equiv="X-Content-Type-Options" content="nosniff" />
-  <meta http-equiv="X-Frame-Options" content="DENY" />
   <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
   <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
   
@@ -160,19 +157,20 @@
   <!-- Main application script -->
   <script type="module" src="/src/main.tsx"></script>
   
-  <!-- Service Worker Registration -->
+  <!-- Service Worker Registration (disabled for now) -->
   <script>
-    if ('serviceWorker' in navigator && 'production' === 'production') {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then((registration) => {
-            console.log('SW registered: ', registration);
-          })
-          .catch((registrationError) => {
-            console.log('SW registration failed: ', registrationError);
-          });
-      });
-    }
+    // Service worker disabled for GitHub Pages deployment
+    // if ('serviceWorker' in navigator && 'production' === 'production') {
+    //   window.addEventListener('load', () => {
+    //     navigator.serviceWorker.register('/sw.js')
+    //       .then((registration) => {
+    //         console.log('SW registered: ', registration);
+    //       })
+    //       .catch((registrationError) => {
+    //         console.log('SW registration failed: ', registrationError);
+    //       });
+    //   });
+    // }
   </script>
   
   <!-- Performance monitoring -->

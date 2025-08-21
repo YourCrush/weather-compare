@@ -38,10 +38,10 @@ if (process.env.NODE_ENV === 'development') {
     console.log(`⚡ App initialized in ${initMeasure.duration.toFixed(2)}ms`);
   }
   
-  // Report Web Vitals in development
-  import('./utils/webVitals').then(({ reportWebVitals }) => {
-    reportWebVitals((metric) => {
-      console.log(`📊 ${metric.name}: ${metric.value}${metric.unit || ''}`);
-    });
-  });
+  // Web Vitals reporting disabled for now
+  // import('./utils/webVitals').then(({ reportWebVitals }) => {
+  //   reportWebVitals((metric) => {
+  //     console.log(`📊 ${metric.name}: ${metric.value}${metric.unit || ''}`);
+  //   });
+  // });
 }
