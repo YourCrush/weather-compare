@@ -4,6 +4,20 @@ export interface CacheEntry<T> {
   ttl: number;
 }
 
+export enum CacheKeys {
+  CURRENT_WEATHER = 'current_weather',
+  FORECAST = 'forecast',
+  HISTORICAL = 'historical',
+  GEOCODING = 'geocoding',
+}
+
+export enum CacheTTL {
+  CURRENT_WEATHER = 15, // 15 minutes
+  FORECAST = 60, // 1 hour
+  HISTORICAL = 1440, // 24 hours
+  GEOCODING = 10080, // 1 week
+}
+
 export class CacheService {
   private cache = new Map<string, CacheEntry<any>>();
 
