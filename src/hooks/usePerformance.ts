@@ -1,4 +1,4 @@
-import { useCallback, useRef, useMemo, useEffect } from 'react';
+import React, { useCallback, useRef, useMemo, useEffect, useState } from 'react';
 import { debounce, throttle, memoize } from '../utils/performance';
 
 /**

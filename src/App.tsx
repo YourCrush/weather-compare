@@ -1,24 +1,18 @@
-import React, { Suspense, lazy } from 'react';
-import { ErrorBoundary } from './components/ErrorBoundary';
+import React from 'react';
 import { AppProvider } from './context/AppContext';
 import { SettingsProvider } from './context/SettingsContext';
 import { WeatherDataProvider } from './context/WeatherDataProvider';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { Header } from './components/Layout/Header';
 import { Footer } from './components/Layout/Footer';
 import { Sidebar } from './components/Layout/Sidebar';
 import { ErrorNotifications } from './components/ErrorNotifications';
-import { SharedStateNotification } from './components/SharedStateNotification';
-import { LoadingOverlay } from './components/Loading/LoadingOverlay';
-import { PerformanceMonitor } from './components/Performance/PerformanceMonitor';
-import { ExportModal } from './components/Export/ExportModal';
+import { SummaryView } from './components/Views/SummaryView';
+import { CardsView } from './components/Views/CardsView';
+import { ChartsView } from './components/Views/ChartsView';
+import { SeasonalView } from './components/Views/SeasonalView';
 import { useAppContext } from './context';
 import './index.css';
-
-// Lazy load views for better performance
-const SummaryView = lazy(() => import('./components/Views/SummaryView').then(m => ({ default: m.SummaryView })));
-const CardsView = lazy(() => import('./components/Views/CardsView').then(m => ({ default: m.CardsView })));
-const ChartsView = lazy(() => import('./components/Views/ChartsView').then(m => ({ default: m.ChartsView })));
-const SeasonalView = lazy(() => import('./components/Views/SeasonalView').then(m => ({ default: m.SeasonalView })));
 
 const AppContent: React.FC = () => {
   const { state } = useAppContext();
@@ -40,12 +34,6 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-      {/* Global loading overlay */}
-      <LoadingOverlay 
-        isVisible={state.ui.loading} 
-        message="Loading weather data..." 
-      />
-
       {/* Header */}
       <Header />
 
@@ -63,18 +51,10 @@ const AppContent: React.FC = () => {
           `}
           role="main"
           aria-label="Main content"
+          id="main-content"
         >
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <ErrorBoundary>
-              <Suspense fallback={
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-                  <span className="ml-3 text-gray-600 dark:text-gray-400">Loading view...</span>
-                </div>
-              }>
-                {renderActiveView()}
-              </Suspense>
-            </ErrorBoundary>
+            {renderActiveView()}
           </div>
         </main>
       </div>
@@ -82,20 +62,30 @@ const AppContent: React.FC = () => {
       {/* Footer */}
       <Footer />
 
-      {/* Global notifications and modals */}
+      {/* Global notifications */}
       <ErrorNotifications />
-      <SharedStateNotification />
-      <ExportModal />
-
-      {/* Performance monitor (development only) */}
-      <PerformanceMonitor />
     </div>
   );
 };
 
 const App: React.FC = () => {
   return (
-    <ErrorBoundary>
+    <ErrorBoundary
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+          <div className="text-center p-8 max-w-md">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Weather Comparison App</h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">Something went wrong loading the application.</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+            >
+              Reload Page
+            </button>
+          </div>
+        </div>
+      }
+    >
       <AppProvider>
         <SettingsProvider>
           <WeatherDataProvider>

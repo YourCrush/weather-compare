@@ -8,16 +8,21 @@ if (process.env.NODE_ENV === 'development') {
   performance.mark('app-start');
 }
 
-// Create root and render app
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
-);
+// Error handling for missing root element
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+  console.error('Root element not found');
+  document.body.innerHTML = '<div style="padding: 20px; text-align: center;"><h1>Error: Root element not found</h1><p>The application could not start properly.</p></div>';
+} else {
+  // Create root and render app
+  const root = ReactDOM.createRoot(rootElement);
 
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
+}
 
 // Performance monitoring
 if (process.env.NODE_ENV === 'development') {
