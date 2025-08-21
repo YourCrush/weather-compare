@@ -72,20 +72,13 @@ export default defineConfig(({ command, mode }) => {
     
     // Environment variables
     define: {
-      __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
+      __APP_VERSION__: JSON.stringify('1.0.0'),
       __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
     },
     
     // CSS configuration
     css: {
       devSourcemap: !isProduction,
-      postcss: {
-        plugins: [
-          require('tailwindcss'),
-          require('autoprefixer'),
-          ...(isProduction ? [require('cssnano')] : []),
-        ],
-      },
     },
     
     // Optimization
@@ -97,25 +90,6 @@ export default defineConfig(({ command, mode }) => {
         'date-fns',
         'clsx',
       ],
-    },
-    
-    // Test configuration
-    test: {
-      globals: true,
-      environment: 'jsdom',
-      setupFiles: ['./src/__tests__/setup.ts'],
-      css: true,
-      coverage: {
-        provider: 'v8',
-        reporter: ['text', 'json', 'html'],
-        exclude: [
-          'node_modules/',
-          'src/__tests__/',
-          '**/*.d.ts',
-          '**/*.config.*',
-          'dist/',
-        ],
-      },
     },
   };
 });
