@@ -1,32 +1,23 @@
 import React from 'react';
-import { useWeatherComparison } from '../../hooks/useWeatherComparison';
+import { useAppContext } from '../../context';
 import { ComparisonSummary } from '../Summary/ComparisonSummary';
-import { WeatherInsights } from '../Summary/WeatherInsights';
 
 export const SummaryView: React.FC = () => {
-  const { locationsWithData, isLoading } = useWeatherComparison();
+  const { state } = useAppContext();
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-        <span className="ml-3 text-gray-600 dark:text-gray-400">Loading weather data...</span>
-      </div>
-    );
-  }
-
-  if (locationsWithData.length === 0) {
+  if (state.locations.length === 0) {
     return (
       <div className="text-center py-12">
         <div className="card p-8 max-w-md mx-auto">
           <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
           <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-            No Weather Data
+            No Locations Added
           </h3>
           <p className="text-gray-500 dark:text-gray-400">
-            No weather data available yet. Please wait while we fetch the latest information for your locations.
+            Add locations using the sidebar to start comparing weather conditions.
           </p>
         </div>
       </div>
@@ -35,19 +26,15 @@ export const SummaryView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
           Weather Summary
         </h1>
-        <div className="text-sm text-gray-500 dark:text-gray-400">
-          Last updated: {new Date().toLocaleTimeString()}
-        </div>
+        <p className="text-gray-600 dark:text-gray-400">
+          Compare weather conditions across your selected locations
+        </p>
       </div>
-      
-      {/* Weather insights with extremes */}
-      <WeatherInsights />
-      
-      {/* Detailed comparison summary */}
+
       <ComparisonSummary />
     </div>
   );
