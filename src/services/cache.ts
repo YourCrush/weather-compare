@@ -13,8 +13,9 @@ export const CacheKeys = {
 
 export const CacheTTL = {
   CURRENT_WEATHER: 15, // 15 minutes
-  FORECAST: 60, // 1 hour
-  HISTORICAL: 1440, // 24 hours
+  WEEKLY_FORECAST: 60, // 1 hour
+  HISTORICAL_DATA: 1440, // 24 hours
+  LOCATION_SEARCH: 10080, // 1 week
   GEOCODING: 10080, // 1 week
 };
 
