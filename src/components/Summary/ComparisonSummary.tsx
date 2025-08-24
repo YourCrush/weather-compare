@@ -3,7 +3,15 @@ import { useAppContext } from '../../context';
 import { formatTemperature, formatSpeed, formatPressure } from '../../utils/units';
 import { ComparisonChart } from '../Charts/ComparisonChart';
 
-export const ComparisonSummary: React.FC = () => {
+interface ComparisonSummaryProps {
+  viewMode?: 'current' | 'historical' | 'average';
+  selectedDate?: string;
+}
+
+export const ComparisonSummary: React.FC<ComparisonSummaryProps> = ({ 
+  viewMode = 'current', 
+  selectedDate = new Date().toISOString().split('T')[0] 
+}) => {
   const { state } = useAppContext();
   const units = state.settings.units;
   const [viewMode, setViewMode] = useState<'insights' | 'chart'>('insights');
@@ -30,19 +38,40 @@ export const ComparisonSummary: React.FC = () => {
           return (
             <div key={location.id} className="card p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                  {location.name}
-                </h3>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    {location.name}
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {new Date().toLocaleTimeString('en-US', {
+                      timeZone: weatherData?.weekly?.timezone || 'UTC',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true
+                    })} local time
+                  </p>
+                </div>
                 <div className="text-2xl">🌤️</div>
               </div>
               
               {current ? (
                 <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Temperature:</span>
-                    <span className="font-medium text-gray-900 dark:text-gray-100">
-                      {formatTemperature(current.temperature, units)}
-                    </span>
+                  {/* Current Temperature with High/Low */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Temperature:</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">
+                        {formatTemperature(current.temperature, units)}
+                      </span>
+                    </div>
+                    {weatherData?.weekly?.daily?.[0] && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500 dark:text-gray-500">High / Low:</span>
+                        <span className="text-gray-600 dark:text-gray-400">
+                          {formatTemperature(weatherData.weekly.daily[0].tempMax, units)} / {formatTemperature(weatherData.weekly.daily[0].tempMin, units)}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="flex justify-between">
@@ -66,12 +95,25 @@ export const ComparisonSummary: React.FC = () => {
                     </span>
                   </div>
                   
+                  {/* Rain Information */}
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Pressure:</span>
+                    <span className="text-gray-600 dark:text-gray-400">Rain chance:</span>
                     <span className="font-medium text-gray-900 dark:text-gray-100">
-                      {formatPressure(current.pressure, units)}
+                      {current.precipitation.probability}%
                     </span>
                   </div>
+                  
+                  {current.precipitation.probability > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500 dark:text-gray-500">Rain today:</span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        {current.precipitation.total24h > 0 
+                          ? `${current.precipitation.total24h.toFixed(1)}mm` 
+                          : 'None yet'
+                        }
+                      </span>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -140,18 +182,17 @@ export const ComparisonSummary: React.FC = () => {
           name: item.location.name, 
           value: item.weather!.windSpeed 
         }));
-        const pressures = locationsWithData.map(item => ({ 
+        const rainChances = locationsWithData.map(item => ({ 
           name: item.location.name, 
-          value: item.weather!.pressure 
+          value: item.weather!.precipitation.probability 
         }));
 
         const hottest = temperatures.reduce((max, curr) => curr.value > max.value ? curr : max);
         const coldest = temperatures.reduce((min, curr) => curr.value < min.value ? curr : min);
         const mostHumid = humidity.reduce((max, curr) => curr.value > max.value ? curr : max);
-
         const windiest = windSpeeds.reduce((max, curr) => curr.value > max.value ? curr : max);
-        const highestPressure = pressures.reduce((max, curr) => curr.value > max.value ? curr : max);
-        const lowestPressure = pressures.reduce((min, curr) => curr.value < min.value ? curr : min);
+        const mostLikelyRain = rainChances.reduce((max, curr) => curr.value > max.value ? curr : max);
+        const leastLikelyRain = rainChances.reduce((min, curr) => curr.value < min.value ? curr : min);
 
         // Prepare chart data
         const chartData = locationsWithData.map(item => ({
@@ -159,7 +200,7 @@ export const ComparisonSummary: React.FC = () => {
           temperature: item.weather!.temperature,
           humidity: item.weather!.humidity,
           windSpeed: item.weather!.windSpeed,
-          pressure: item.weather!.pressure,
+          rainChance: item.weather!.precipitation.probability,
         }));
 
         return (
@@ -250,23 +291,23 @@ export const ComparisonSummary: React.FC = () => {
 
               <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
                 <div className="flex items-center space-x-2 mb-2">
-                  <span className="text-2xl">📈</span>
-                  <span className="font-medium text-purple-700 dark:text-purple-300">High Pressure</span>
+                  <span className="text-2xl">🌧️</span>
+                  <span className="font-medium text-purple-700 dark:text-purple-300">Most Likely Rain</span>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{highestPressure.name}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{mostLikelyRain.name}</p>
                 <p className="text-lg font-semibold text-purple-800 dark:text-purple-200">
-                  {formatPressure(highestPressure.value, units)}
+                  {mostLikelyRain.value}%
                 </p>
               </div>
 
               <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
                 <div className="flex items-center space-x-2 mb-2">
-                  <span className="text-2xl">📉</span>
-                  <span className="font-medium text-green-700 dark:text-green-300">Low Pressure</span>
+                  <span className="text-2xl">☀️</span>
+                  <span className="font-medium text-green-700 dark:text-green-300">Least Likely Rain</span>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{lowestPressure.name}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{leastLikelyRain.name}</p>
                 <p className="text-lg font-semibold text-green-800 dark:text-green-200">
-                  {formatPressure(lowestPressure.value, units)}
+                  {leastLikelyRain.value}%
                 </p>
               </div>
             </div>

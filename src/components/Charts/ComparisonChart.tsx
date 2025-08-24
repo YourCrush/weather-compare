@@ -6,7 +6,7 @@ interface ChartData {
     temperature: number;
     humidity: number;
     windSpeed: number;
-    pressure: number;
+    rainChance: number;
 }
 
 interface ComparisonChartProps {
@@ -14,7 +14,7 @@ interface ComparisonChartProps {
     units: 'metric' | 'imperial';
 }
 
-type MetricType = 'temperature' | 'humidity' | 'windSpeed' | 'pressure';
+type MetricType = 'temperature' | 'humidity' | 'windSpeed' | 'rainChance';
 
 export const ComparisonChart: React.FC<ComparisonChartProps> = ({ data, units }) => {
     const [activeMetric, setActiveMetric] = useState<MetricType>('temperature');
@@ -49,14 +49,14 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ data, units })
                 format: (value: number) => formatSpeed(value, units),
                 getValue: (item: ChartData) => item.windSpeed,
             },
-            pressure: {
-                label: 'Pressure',
-                icon: '📊',
+            rainChance: {
+                label: 'Rain Chance',
+                icon: '🌧️',
                 color: 'bg-purple-500',
                 lightBg: 'bg-purple-50 dark:bg-purple-900/20',
                 textColor: 'text-purple-700 dark:text-purple-300',
-                format: (value: number) => formatPressure(value, units),
-                getValue: (item: ChartData) => item.pressure,
+                format: (value: number) => `${value}%`,
+                getValue: (item: ChartData) => item.rainChance,
             },
         };
         return configs[metric];
@@ -71,7 +71,7 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ data, units })
         <div className="space-y-6">
             {/* Metric Selector */}
             <div className="flex flex-wrap gap-2 justify-center">
-                {(['temperature', 'humidity', 'windSpeed', 'pressure'] as MetricType[]).map((metric) => {
+                {(['temperature', 'humidity', 'windSpeed', 'rainChance'] as MetricType[]).map((metric) => {
                     const config = getMetricConfig(metric);
                     const isActive = activeMetric === metric;
 
@@ -109,9 +109,18 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ data, units })
             <div className="space-y-4">
                 {data.map((item, index) => {
                     const value = currentConfig.getValue(item);
-                    const percentage = maxValue === minValue ? 100 : ((value - minValue) / (maxValue - minValue)) * 100;
                     const isHighest = value === maxValue;
                     const isLowest = value === minValue && maxValue !== minValue;
+                    
+                    // Calculate bar width based on metric type
+                    let barWidth: number;
+                    if (activeMetric === 'humidity' || activeMetric === 'rainChance') {
+                        // For percentages, use the actual percentage
+                        barWidth = Math.max(value, 2);
+                    } else {
+                        // For other metrics, use relative scaling
+                        barWidth = maxValue === minValue ? 100 : Math.max(((value - minValue) / (maxValue - minValue)) * 100, 8);
+                    }
 
                     return (
                         <div key={item.name} className="space-y-2">
@@ -142,13 +151,13 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ data, units })
                                 <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                                     <div
                                         className={`h-full ${currentConfig.color} transition-all duration-700 ease-out rounded-full`}
-                                        style={{ width: `${Math.max(percentage, 8)}%` }}
+                                        style={{ width: `${barWidth}%` }}
                                     />
                                 </div>
-                                {/* Value label on bar for larger screens */}
+                                {/* Value label shows actual value, not confusing percentage */}
                                 <div className="absolute inset-y-0 right-2 flex items-center">
                                     <span className="text-xs font-medium text-gray-600 dark:text-gray-300 hidden sm:block">
-                                        {percentage.toFixed(0)}%
+                                        {currentConfig.format(value)}
                                     </span>
                                 </div>
                             </div>
@@ -191,11 +200,9 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ data, units })
                         <div className={`font-semibold ${currentConfig.textColor}`}>
                             {activeMetric === 'temperature'
                                 ? formatTemperature(Math.abs(maxValue - minValue), units).replace(/[°CF]/g, '°')
-                                : activeMetric === 'humidity'
+                                : activeMetric === 'humidity' || activeMetric === 'rainChance'
                                     ? `${Math.abs(maxValue - minValue).toFixed(0)}%`
-                                    : activeMetric === 'windSpeed'
-                                        ? formatSpeed(Math.abs(maxValue - minValue), units)
-                                        : formatPressure(Math.abs(maxValue - minValue), units)
+                                    : formatSpeed(Math.abs(maxValue - minValue), units)
                             }
                         </div>
                     </div>
@@ -211,7 +218,7 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ data, units })
                             <th className="text-center py-2 font-medium text-gray-900 dark:text-gray-100">🌡️</th>
                             <th className="text-center py-2 font-medium text-gray-900 dark:text-gray-100">💧</th>
                             <th className="text-center py-2 font-medium text-gray-900 dark:text-gray-100">🌬️</th>
-                            <th className="text-center py-2 font-medium text-gray-900 dark:text-gray-100">📊</th>
+                            <th className="text-center py-2 font-medium text-gray-900 dark:text-gray-100">🌧️</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -228,7 +235,7 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ data, units })
                                     {formatSpeed(item.windSpeed, units)}
                                 </td>
                                 <td className="text-center py-2 text-gray-600 dark:text-gray-400">
-                                    {formatPressure(item.pressure, units)}
+                                    {item.rainChance}%
                                 </td>
                             </tr>
                         ))}
