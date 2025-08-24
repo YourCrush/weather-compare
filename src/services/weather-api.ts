@@ -229,9 +229,10 @@ export class OpenMeteoWeatherService implements WeatherService {
         format: 'json',
       });
 
-      const response = await this.fetchWithRetry(
-        `${this.geocodingUrl}/search?${params}`
-      );
+      const url = `${this.geocodingUrl}/search?${params}`;
+      console.log('Searching locations with URL:', url);
+
+      const response = await this.fetchWithRetry(url);
       
       if (!response.ok) {
         throw new WeatherApiError(
@@ -241,7 +242,10 @@ export class OpenMeteoWeatherService implements WeatherService {
       }
 
       const data: OpenMeteoGeocodingResponse = await response.json();
+      console.log('API Response:', data);
+      
       const locations = this.transformLocationResults(data);
+      console.log('Transformed locations:', locations);
       
       // Cache the result
       cacheService.set(cacheKey, locations, CacheTTL.LOCATION_SEARCH);
@@ -271,7 +275,6 @@ export class OpenMeteoWeatherService implements WeatherService {
           ...options,
           headers: {
             'Accept': 'application/json',
-            'User-Agent': 'WeatherCompareApp/1.0',
             ...options.headers,
           },
         });

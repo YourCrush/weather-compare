@@ -56,9 +56,10 @@ export const LocationSearch: React.FC<LocationSearchProps> = ({
       setIsOpen(searchResults.length > 0);
       setSelectedIndex(-1);
     } catch (err) {
+      console.error('Location search error:', err);
       const errorMessage = err instanceof WeatherApiError 
-        ? 'Unable to search locations. Please try again.'
-        : 'Search failed. Please check your connection.';
+        ? `API Error: ${err.message}`
+        : `Search failed: ${err instanceof Error ? err.message : 'Unknown error'}`;
       
       setError(errorMessage);
       setResults([]);
