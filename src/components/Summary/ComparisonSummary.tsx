@@ -1,23 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAppContext } from '../../context';
 import { formatTemperature, formatSpeed, formatPressure } from '../../utils/units';
+import { ComparisonChart } from '../Charts/ComparisonChart';
 
 export const ComparisonSummary: React.FC = () => {
   const { state } = useAppContext();
   const units = state.settings.units;
+  const [viewMode, setViewMode] = useState<'insights' | 'chart'>('insights');
 
-  // Debug logging
-  console.log('🔍 ComparisonSummary Debug:', {
-    locationsCount: state.locations.length,
-    locations: state.locations.map(loc => ({ id: loc.id, name: loc.name })),
-    weatherDataKeys: Array.from(state.weatherData.keys()),
-    weatherDataEntries: Array.from(state.weatherData.entries()).map(([id, data]) => ({
-      id,
-      hasCurrent: !!data?.current,
-      currentTemp: data?.current?.temperature,
-      lastUpdated: data?.lastUpdated
-    }))
-  });
+
 
   if (state.locations.length === 0) {
     return (
@@ -120,16 +111,6 @@ export const ComparisonSummary: React.FC = () => {
           }))
           .filter(item => item.weather);
 
-        console.log('🔍 Comparison Logic Debug:', {
-          totalLocations: state.locations.length,
-          locationsWithData: locationsWithData.length,
-          locationsWithDataDetails: locationsWithData.map(item => ({
-            name: item.location.name,
-            hasWeather: !!item.weather,
-            temp: item.weather?.temperature
-          }))
-        });
-
         if (locationsWithData.length < 2) {
           return (
             <div className="card p-6">
@@ -172,11 +153,56 @@ export const ComparisonSummary: React.FC = () => {
         const highestPressure = pressures.reduce((max, curr) => curr.value > max.value ? curr : max);
         const lowestPressure = pressures.reduce((min, curr) => curr.value < min.value ? curr : min);
 
+        // Prepare chart data
+        const chartData = locationsWithData.map(item => ({
+          name: item.location.name,
+          temperature: item.weather!.temperature,
+          humidity: item.weather!.humidity,
+          windSpeed: item.weather!.windSpeed,
+          pressure: item.weather!.pressure,
+        }));
+
         return (
           <div className="card p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-              Comparison Insights
-            </h3>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Comparison Insights
+              </h3>
+              
+              {/* View Toggle */}
+              <div className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode('insights')}
+                  className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                    viewMode === 'insights'
+                      ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                  }`}
+                >
+                  <div className="flex items-center space-x-1">
+                    <span>📊</span>
+                    <span>Cards</span>
+                  </div>
+                </button>
+                <button
+                  onClick={() => setViewMode('chart')}
+                  className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                    viewMode === 'chart'
+                      ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                  }`}
+                >
+                  <div className="flex items-center space-x-1">
+                    <span>📈</span>
+                    <span>Chart</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Render based on view mode */}
+            {viewMode === 'insights' ? (
+              <div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
                 <div className="flex items-center space-x-2 mb-2">
@@ -245,17 +271,21 @@ export const ComparisonSummary: React.FC = () => {
               </div>
             </div>
 
-            {/* Temperature difference insight */}
-            {hottest.value !== coldest.value && (
-              <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <div className="flex items-center space-x-2 mb-2">
-                  <span className="text-xl">🌡️</span>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Temperature Range</span>
-                </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  There's a {formatTemperature(Math.abs(hottest.value - coldest.value), units).replace(/[°CF]/g, '°')} difference between the hottest and coldest locations.
-                </p>
+                {/* Temperature difference insight */}
+                {hottest.value !== coldest.value && (
+                  <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <span className="text-xl">🌡️</span>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">Temperature Range</span>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      There's a {formatTemperature(Math.abs(hottest.value - coldest.value), units).replace(/[°CF]/g, '°')} difference between the hottest and coldest locations.
+                    </p>
+                  </div>
+                )}
               </div>
+            ) : (
+              <ComparisonChart data={chartData} units={units} />
             )}
           </div>
         );
