@@ -111,7 +111,7 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ data, units })
                     const value = currentConfig.getValue(item);
                     const isHighest = value === maxValue;
                     const isLowest = value === minValue && maxValue !== minValue;
-                    
+
                     // Calculate bar width based on metric type
                     let barWidth: number;
                     if (activeMetric === 'humidity' || activeMetric === 'rainChance') {
