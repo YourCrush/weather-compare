@@ -20,10 +20,13 @@ export class OpenMeteoWeatherService implements WeatherService {
   private readonly geocodingUrl = 'https://geocoding-api.open-meteo.com/v1';
 
   async getCurrentWeather(lat: number, lon: number): Promise<CurrentWeather> {
+    console.log(`🌤️ Fetching current weather for ${lat}, ${lon}`);
+    
     const cacheKey = CacheKeys.currentWeather(lat, lon);
     const cached = cacheService.get<CurrentWeather>(cacheKey);
     
     if (cached) {
+      console.log('✅ Using cached current weather data');
       return cached;
     }
 
@@ -53,9 +56,10 @@ export class OpenMeteoWeatherService implements WeatherService {
         forecast_days: '1',
       });
 
-      const response = await this.fetchWithRetry(
-        `${this.baseUrl}/forecast?${params}`
-      );
+      const url = `${this.baseUrl}/forecast?${params}`;
+      console.log('🌤️ Current weather URL:', url);
+
+      const response = await this.fetchWithRetry(url);
       
       if (!response.ok) {
         throw new WeatherApiError(
@@ -67,7 +71,10 @@ export class OpenMeteoWeatherService implements WeatherService {
       const data: OpenMeteoCurrentResponse & { daily: { sunrise: string[]; sunset: string[] } } = 
         await response.json();
 
+      console.log('🌤️ Current weather API response:', data);
+
       const currentWeather = this.transformCurrentWeather(data);
+      console.log('🌤️ Transformed current weather:', currentWeather);
       
       // Cache the result
       cacheService.set(cacheKey, currentWeather, CacheTTL.CURRENT_WEATHER);

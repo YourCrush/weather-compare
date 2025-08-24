@@ -26,15 +26,18 @@ export const WeatherDataProvider: React.FC<WeatherDataProviderProps> = ({ childr
   // Fetch weather data for a location
   const fetchWeatherData = useCallback(async (location: Location): Promise<WeatherData> => {
     const locationId = location.id;
+    console.log(`🚀 Starting weather data fetch for ${location.name} (${location.latitude}, ${location.longitude})`);
     
     // Check if already loading
     if (loadingLocations.has(locationId)) {
+      console.log('⏳ Already loading weather data for this location');
       throw new Error('Weather data is already being fetched for this location');
     }
 
     // Check cache first
     const cachedData = CacheUtils.getCachedWeatherData(location);
     if (cachedData && cachedData.current) {
+      console.log('✅ Using cached weather data');
       return cachedData as WeatherData;
     }
 
@@ -43,6 +46,7 @@ export const WeatherDataProvider: React.FC<WeatherDataProviderProps> = ({ childr
     setLoading(true);
 
     try {
+      console.log('📡 Fetching current and weekly weather data...');
       // Fetch current and weekly data (required)
       const [current, weekly] = await Promise.all([
         weatherService.getCurrentWeather(location.latitude, location.longitude),
@@ -71,14 +75,19 @@ export const WeatherDataProvider: React.FC<WeatherDataProviderProps> = ({ childr
         lastUpdated: new Date().toISOString(),
       };
 
+      console.log('✅ Successfully fetched all weather data:', weatherData);
+
       // Cache the data
       CacheUtils.cacheWeatherData(location, weatherData);
 
       // Update app state
       setWeatherData(locationId, weatherData);
+      console.log('✅ Weather data stored in app state');
 
       return weatherData;
     } catch (error) {
+      console.error(`❌ Failed to fetch weather data for ${location.name}:`, error);
+      
       const errorMessage = error instanceof WeatherApiError 
         ? error.message 
         : 'Failed to fetch weather data';
