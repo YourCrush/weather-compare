@@ -194,14 +194,17 @@ export const ComparisonSummary: React.FC<ComparisonSummaryProps> = ({
         const mostLikelyRain = rainChances.reduce((max, curr) => curr.value > max.value ? curr : max);
         const leastLikelyRain = rainChances.reduce((min, curr) => curr.value < min.value ? curr : min);
 
-        // Prepare chart data
-        const chartData = locationsWithData.map(item => ({
-          name: item.location.name,
-          temperature: item.weather!.temperature,
-          humidity: item.weather!.humidity,
-          windSpeed: item.weather!.windSpeed,
-          rainChance: item.weather!.precipitation.probability,
-        }));
+        // Prepare chart data - collect today's forecasts
+        const todayForecasts = new Map<string, any>();
+        const locationNames = new Map<string, string>();
+        
+        locationsWithData.forEach(item => {
+          const weatherData = state.weatherData.get(item.location.id);
+          if (weatherData?.today) {
+            todayForecasts.set(item.location.id, weatherData.today);
+            locationNames.set(item.location.id, item.location.name);
+          }
+        });
 
         return (
           <div className="card p-6">
@@ -326,7 +329,11 @@ export const ComparisonSummary: React.FC<ComparisonSummaryProps> = ({
                 )}
               </div>
             ) : (
-              <ComparisonChart data={chartData} units={units} />
+              <ComparisonChart 
+                todayForecasts={todayForecasts} 
+                locationNames={locationNames} 
+                units={units} 
+              />
             )}
           </div>
         );
