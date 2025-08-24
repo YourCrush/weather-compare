@@ -43,12 +43,26 @@ export const WeatherDataProvider: React.FC<WeatherDataProviderProps> = ({ childr
     setLoading(true);
 
     try {
-      // Fetch all weather data in parallel
-      const [current, weekly, historical] = await Promise.all([
+      // Fetch current and weekly data (required)
+      const [current, weekly] = await Promise.all([
         weatherService.getCurrentWeather(location.latitude, location.longitude),
         weatherService.getWeeklyForecast(location.latitude, location.longitude),
-        weatherService.getHistoricalData(location.latitude, location.longitude, 24),
       ]);
+
+      // Fetch historical data (optional - don't fail if it's not available)
+      let historical: any = null;
+      try {
+        historical = await weatherService.getHistoricalData(location.latitude, location.longitude, 24);
+      } catch (historicalError) {
+        console.warn(`Historical data not available for ${location.name}:`, historicalError);
+        // Create a minimal historical data structure
+        historical = {
+          monthly: [],
+          location: `${location.latitude}, ${location.longitude}`,
+          startDate: '',
+          endDate: '',
+        };
+      }
 
       const weatherData: WeatherData = {
         current,

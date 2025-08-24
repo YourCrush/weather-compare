@@ -246,6 +246,9 @@ export const LocationSearch: React.FC<LocationSearchProps> = ({
           <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
             No locations found for "{query}"
           </p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 text-center mt-2">
+            Try searching for just the city name (e.g., "Austin" instead of "Austin, TX")
+          </p>
         </div>
       )}
     </div>

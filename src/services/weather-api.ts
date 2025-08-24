@@ -155,8 +155,12 @@ export class OpenMeteoWeatherService implements WeatherService {
     }
 
     try {
+      // For historical data, we need to ensure we're not requesting data that's too recent
+      // Open-Meteo archive API has a delay of about 5 days for recent data
       const endDate = new Date();
-      const startDate = new Date();
+      endDate.setDate(endDate.getDate() - 7); // Go back 7 days to be safe
+      
+      const startDate = new Date(endDate);
       startDate.setMonth(startDate.getMonth() - months);
 
       const params = new URLSearchParams({
