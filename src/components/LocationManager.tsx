@@ -1,41 +1,17 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useAppContext } from '../context';
 import { LocationList } from './LocationList';
+import { LocationSearch } from './LocationSearch';
+import { Location } from '../types';
 
 export const LocationManager: React.FC = () => {
   const { state, addLocation, removeLocation } = useAppContext();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
 
-  const handleAddLocation = async () => {
-    if (!searchQuery.trim()) return;
-
-    setIsSearching(true);
-    try {
-      // For now, create a mock location
-      const mockLocation = {
-        id: Date.now().toString(),
-        name: searchQuery,
-        country: 'Unknown',
-        latitude: 0,
-        longitude: 0,
-        timezone: 'UTC',
-        region: undefined,
-      };
-
-      addLocation(mockLocation);
-      setSearchQuery('');
-    } catch (error) {
-      console.error('Failed to add location:', error);
-    } finally {
-      setIsSearching(false);
+  const handleLocationSelected = (location: Location) => {
+    if (state.locations.length >= 3) {
+      return; // Don't add if already at max
     }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleAddLocation();
-    }
+    addLocation(location);
   };
 
   return (
@@ -46,24 +22,12 @@ export const LocationManager: React.FC = () => {
         </h2>
         
         <div className="space-y-3">
-          <div className="flex space-x-2">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Enter city name..."
-              className="input flex-1"
-              disabled={isSearching || state.locations.length >= 3}
-            />
-            <button
-              onClick={handleAddLocation}
-              disabled={!searchQuery.trim() || isSearching || state.locations.length >= 3}
-              className="btn-primary"
-            >
-              {isSearching ? 'Adding...' : 'Add'}
-            </button>
-          </div>
+          <LocationSearch
+            onLocationSelected={handleLocationSelected}
+            placeholder="Search for a city..."
+            maxResults={5}
+            className="w-full"
+          />
           
           {state.locations.length >= 3 && (
             <p className="text-sm text-amber-600 dark:text-amber-400">
