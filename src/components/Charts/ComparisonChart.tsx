@@ -1,22 +1,16 @@
 import React, { useState } from 'react';
-import { formatTemperature, formatSpeed, formatPressure } from '../../utils/units';
-
-interface ChartData {
-    name: string;
-    temperature: number;
-    humidity: number;
-    windSpeed: number;
-    rainChance: number;
-}
+import { formatTemperature, formatSpeed } from '../../utils/units';
+import { TodayForecast } from '../../types';
 
 interface ComparisonChartProps {
-    data: ChartData[];
+    todayForecasts: Map<string, TodayForecast>;
+    locationNames: Map<string, string>;
     units: 'metric' | 'imperial';
 }
 
 type MetricType = 'temperature' | 'humidity' | 'windSpeed' | 'rainChance';
 
-export const ComparisonChart: React.FC<ComparisonChartProps> = ({ data, units }) => {
+export const ComparisonChart: React.FC<ComparisonChartProps> = ({ todayForecasts, locationNames, units }) => {
     const [activeMetric, setActiveMetric] = useState<MetricType>('temperature');
 
     // Get metric configuration
@@ -25,47 +19,99 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ data, units })
             temperature: {
                 label: 'Temperature',
                 icon: '🌡️',
-                color: 'bg-red-500',
+                color: '#ef4444',
                 lightBg: 'bg-red-50 dark:bg-red-900/20',
                 textColor: 'text-red-700 dark:text-red-300',
                 format: (value: number) => formatTemperature(value, units),
-                getValue: (item: ChartData) => item.temperature,
+                unit: units === 'metric' ? '°C' : '°F',
             },
             humidity: {
                 label: 'Humidity',
                 icon: '💧',
-                color: 'bg-blue-500',
+                color: '#3b82f6',
                 lightBg: 'bg-blue-50 dark:bg-blue-900/20',
                 textColor: 'text-blue-700 dark:text-blue-300',
                 format: (value: number) => `${value}%`,
-                getValue: (item: ChartData) => item.humidity,
+                unit: '%',
             },
             windSpeed: {
                 label: 'Wind Speed',
                 icon: '🌬️',
-                color: 'bg-yellow-500',
+                color: '#eab308',
                 lightBg: 'bg-yellow-50 dark:bg-yellow-900/20',
                 textColor: 'text-yellow-700 dark:text-yellow-300',
                 format: (value: number) => formatSpeed(value, units),
-                getValue: (item: ChartData) => item.windSpeed,
+                unit: units === 'metric' ? 'km/h' : 'mph',
             },
             rainChance: {
                 label: 'Rain Chance',
                 icon: '🌧️',
-                color: 'bg-purple-500',
+                color: '#8b5cf6',
                 lightBg: 'bg-purple-50 dark:bg-purple-900/20',
                 textColor: 'text-purple-700 dark:text-purple-300',
                 format: (value: number) => `${value}%`,
-                getValue: (item: ChartData) => item.rainChance,
+                unit: '%',
             },
         };
         return configs[metric];
     };
 
     const currentConfig = getMetricConfig(activeMetric);
-    const values = data.map(currentConfig.getValue);
-    const maxValue = Math.max(...values);
-    const minValue = Math.min(...values);
+    
+    // Prepare line chart data
+    const chartData = Array.from(todayForecasts.entries()).map(([locationId, forecast]) => {
+        const locationName = locationNames.get(locationId) || 'Unknown';
+        const hourlyData = forecast.hourly.map(hour => {
+            let value: number;
+            switch (activeMetric) {
+                case 'temperature':
+                    value = hour.temperature;
+                    break;
+                case 'humidity':
+                    value = hour.humidity;
+                    break;
+                case 'windSpeed':
+                    value = hour.windSpeed;
+                    break;
+                case 'rainChance':
+                    value = hour.precipitation.probability;
+                    break;
+                default:
+                    value = 0;
+            }
+            return {
+                time: hour.time,
+                value,
+                hour: new Date(hour.time).getHours(),
+            };
+        });
+        
+        return {
+            locationId,
+            locationName,
+            data: hourlyData,
+        };
+    });
+
+    // Get all values to determine chart scale
+    const allValues = chartData.flatMap(location => location.data.map(d => d.value));
+    const maxValue = Math.max(...allValues);
+    const minValue = Math.min(...allValues);
+    const valueRange = maxValue - minValue;
+
+    // Color palette for different cities
+    const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+
+    if (chartData.length === 0) {
+        return (
+            <div className="text-center py-8">
+                <div className="text-3xl mb-2">📊</div>
+                <p className="text-gray-500 dark:text-gray-400">
+                    No hourly forecast data available for comparison
+                </p>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -98,72 +144,113 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ data, units })
             <div className="text-center">
                 <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center justify-center space-x-2">
                     <span>{currentConfig.icon}</span>
-                    <span>{currentConfig.label} Comparison</span>
+                    <span>{currentConfig.label} Throughout Today</span>
                 </h4>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    Compare {currentConfig.label.toLowerCase()} across all locations
+                    Hourly {currentConfig.label.toLowerCase()} comparison across all locations
                 </p>
             </div>
 
-            {/* Clean Bar Chart */}
-            <div className="space-y-4">
-                {data.map((item, index) => {
-                    const value = currentConfig.getValue(item);
-                    const isHighest = value === maxValue;
-                    const isLowest = value === minValue && maxValue !== minValue;
-
-                    // Calculate bar width based on metric type
-                    let barWidth: number;
-                    if (activeMetric === 'humidity' || activeMetric === 'rainChance') {
-                        // For percentages, use the actual percentage
-                        barWidth = Math.max(value, 2);
-                    } else {
-                        // For other metrics, use relative scaling
-                        barWidth = maxValue === minValue ? 100 : Math.max(((value - minValue) / (maxValue - minValue)) * 100, 8);
-                    }
-
-                    return (
-                        <div key={item.name} className="space-y-2">
-                            {/* Location name and value */}
-                            <div className="flex justify-between items-center">
-                                <div className="flex items-center space-x-2">
-                                    <h5 className="font-medium text-gray-900 dark:text-gray-100">
-                                        {item.name}
-                                    </h5>
-                                    {isHighest && (
-                                        <span className="px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full">
-                                            Highest
-                                        </span>
-                                    )}
-                                    {isLowest && (
-                                        <span className="px-2 py-1 text-xs font-medium bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-full">
-                                            Lowest
-                                        </span>
-                                    )}
-                                </div>
-                                <div className={`font-semibold ${currentConfig.textColor}`}>
+            {/* Line Chart */}
+            <div className={`p-6 ${currentConfig.lightBg} rounded-lg`}>
+                <div className="relative h-64 w-full">
+                    <svg className="w-full h-full" viewBox="0 0 800 200">
+                        {/* Grid lines */}
+                        {[0, 1, 2, 3, 4].map(i => (
+                            <line
+                                key={i}
+                                x1="60"
+                                y1={40 + i * 30}
+                                x2="740"
+                                y2={40 + i * 30}
+                                stroke="currentColor"
+                                strokeWidth="0.5"
+                                className="text-gray-300 dark:text-gray-600"
+                            />
+                        ))}
+                        
+                        {/* Y-axis labels */}
+                        {[0, 1, 2, 3, 4].map(i => {
+                            const value = maxValue - (i * valueRange / 4);
+                            return (
+                                <text
+                                    key={i}
+                                    x="50"
+                                    y={45 + i * 30}
+                                    textAnchor="end"
+                                    className="text-xs fill-gray-500 dark:fill-gray-400"
+                                >
                                     {currentConfig.format(value)}
-                                </div>
-                            </div>
+                                </text>
+                            );
+                        })}
 
-                            {/* Clean horizontal bar */}
-                            <div className="relative">
-                                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                    <div
-                                        className={`h-full ${currentConfig.color} transition-all duration-700 ease-out rounded-full`}
-                                        style={{ width: `${barWidth}%` }}
+                        {/* X-axis labels (hours) */}
+                        {[0, 6, 12, 18, 24].map(hour => (
+                            <text
+                                key={hour}
+                                x={60 + (hour / 24) * 680}
+                                y="190"
+                                textAnchor="middle"
+                                className="text-xs fill-gray-500 dark:fill-gray-400"
+                            >
+                                {hour}:00
+                            </text>
+                        ))}
+
+                        {/* Data lines */}
+                        {chartData.map((location, locationIndex) => {
+                            const color = colors[locationIndex % colors.length];
+                            const points = location.data.map((point, index) => {
+                                const x = 60 + (index / (location.data.length - 1)) * 680;
+                                const y = 40 + ((maxValue - point.value) / valueRange) * 120;
+                                return `${x},${y}`;
+                            }).join(' ');
+
+                            return (
+                                <g key={location.locationId}>
+                                    <polyline
+                                        points={points}
+                                        fill="none"
+                                        stroke={color}
+                                        strokeWidth="2"
+                                        className="drop-shadow-sm"
                                     />
-                                </div>
-                                {/* Value label shows actual value, not confusing percentage */}
-                                <div className="absolute inset-y-0 right-2 flex items-center">
-                                    <span className="text-xs font-medium text-gray-600 dark:text-gray-300 hidden sm:block">
-                                        {currentConfig.format(value)}
-                                    </span>
-                                </div>
-                            </div>
+                                    {/* Data points */}
+                                    {location.data.map((point, index) => {
+                                        const x = 60 + (index / (location.data.length - 1)) * 680;
+                                        const y = 40 + ((maxValue - point.value) / valueRange) * 120;
+                                        return (
+                                            <circle
+                                                key={index}
+                                                cx={x}
+                                                cy={y}
+                                                r="3"
+                                                fill={color}
+                                                className="drop-shadow-sm"
+                                            />
+                                        );
+                                    })}
+                                </g>
+                            );
+                        })}
+                    </svg>
+                </div>
+
+                {/* Legend */}
+                <div className="flex flex-wrap gap-4 justify-center mt-4">
+                    {chartData.map((location, index) => (
+                        <div key={location.locationId} className="flex items-center space-x-2">
+                            <div 
+                                className="w-4 h-4 rounded-full"
+                                style={{ backgroundColor: colors[index % colors.length] }}
+                            />
+                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                                {location.locationName}
+                            </span>
                         </div>
-                    );
-                })}
+                    ))}
+                </div>
             </div>
 
             {/* Summary Stats */}
@@ -190,7 +277,7 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ data, units })
                             Average
                         </div>
                         <div className={`font-semibold ${currentConfig.textColor}`}>
-                            {currentConfig.format(values.reduce((a, b) => a + b, 0) / values.length)}
+                            {currentConfig.format(allValues.reduce((a, b) => a + b, 0) / allValues.length)}
                         </div>
                     </div>
                     <div>
@@ -198,49 +285,10 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ data, units })
                             Range
                         </div>
                         <div className={`font-semibold ${currentConfig.textColor}`}>
-                            {activeMetric === 'temperature'
-                                ? formatTemperature(Math.abs(maxValue - minValue), units).replace(/[°CF]/g, '°')
-                                : activeMetric === 'humidity' || activeMetric === 'rainChance'
-                                    ? `${Math.abs(maxValue - minValue).toFixed(0)}%`
-                                    : formatSpeed(Math.abs(maxValue - minValue), units)
-                            }
+                            {currentConfig.format(Math.abs(maxValue - minValue))}
                         </div>
                     </div>
                 </div>
-            </div>
-
-            {/* Quick comparison table */}
-            <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                    <thead>
-                        <tr className="border-b border-gray-200 dark:border-gray-700">
-                            <th className="text-left py-2 font-medium text-gray-900 dark:text-gray-100">Location</th>
-                            <th className="text-center py-2 font-medium text-gray-900 dark:text-gray-100">🌡️</th>
-                            <th className="text-center py-2 font-medium text-gray-900 dark:text-gray-100">💧</th>
-                            <th className="text-center py-2 font-medium text-gray-900 dark:text-gray-100">🌬️</th>
-                            <th className="text-center py-2 font-medium text-gray-900 dark:text-gray-100">🌧️</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {data.map((item) => (
-                            <tr key={item.name} className="border-b border-gray-100 dark:border-gray-800">
-                                <td className="py-2 font-medium text-gray-900 dark:text-gray-100">{item.name}</td>
-                                <td className="text-center py-2 text-gray-600 dark:text-gray-400">
-                                    {formatTemperature(item.temperature, units)}
-                                </td>
-                                <td className="text-center py-2 text-gray-600 dark:text-gray-400">
-                                    {item.humidity}%
-                                </td>
-                                <td className="text-center py-2 text-gray-600 dark:text-gray-400">
-                                    {formatSpeed(item.windSpeed, units)}
-                                </td>
-                                <td className="text-center py-2 text-gray-600 dark:text-gray-400">
-                                    {item.rainChance}%
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
             </div>
         </div>
     );
