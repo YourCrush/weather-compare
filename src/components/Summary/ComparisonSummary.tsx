@@ -14,7 +14,7 @@ export const ComparisonSummary: React.FC<ComparisonSummaryProps> = ({
 }) => {
   const { state } = useAppContext();
   const units = state.settings.units;
-  const [viewMode, setViewMode] = useState<'insights' | 'chart'>('insights');
+  const [chartViewMode, setChartViewMode] = useState<'insights' | 'chart'>('insights');
 
 
 
@@ -213,9 +213,9 @@ export const ComparisonSummary: React.FC<ComparisonSummaryProps> = ({
               {/* View Toggle */}
               <div className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
                 <button
-                  onClick={() => setViewMode('insights')}
+                  onClick={() => setChartViewMode('insights')}
                   className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
-                    viewMode === 'insights'
+                    chartViewMode === 'insights'
                       ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm'
                       : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                   }`}
@@ -226,9 +226,9 @@ export const ComparisonSummary: React.FC<ComparisonSummaryProps> = ({
                   </div>
                 </button>
                 <button
-                  onClick={() => setViewMode('chart')}
+                  onClick={() => setChartViewMode('chart')}
                   className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
-                    viewMode === 'chart'
+                    chartViewMode === 'chart'
                       ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm'
                       : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                   }`}
@@ -242,7 +242,7 @@ export const ComparisonSummary: React.FC<ComparisonSummaryProps> = ({
             </div>
 
             {/* Render based on view mode */}
-            {viewMode === 'insights' ? (
+            {chartViewMode === 'insights' ? (
               <div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
