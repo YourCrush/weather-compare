@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import * as React from 'react';
 import { formatTemperature, formatSpeed } from '../../utils/units';
 import { TodayForecast } from '../../types';
 
@@ -11,7 +11,7 @@ interface ComparisonChartProps {
 type MetricType = 'temperature' | 'humidity' | 'windSpeed' | 'rainChance';
 
 export const ComparisonChart: React.FC<ComparisonChartProps> = ({ todayForecasts, locationNames, units }) => {
-    const [activeMetric, setActiveMetric] = useState<MetricType>('temperature');
+    const [activeMetric, setActiveMetric] = React.useState<MetricType>('temperature');
 
     // Get metric configuration
     const getMetricConfig = (metric: MetricType) => {
@@ -57,7 +57,7 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ todayForecasts
     };
 
     const currentConfig = getMetricConfig(activeMetric);
-    
+
     // Prepare line chart data
     const chartData = Array.from(todayForecasts.entries()).map(([locationId, forecast]) => {
         const locationName = locationNames.get(locationId) || 'Unknown';
@@ -85,7 +85,7 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ todayForecasts
                 hour: new Date(hour.time).getHours(),
             };
         });
-        
+
         return {
             locationId,
             locationName,
@@ -168,7 +168,7 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ todayForecasts
                                 className="text-gray-300 dark:text-gray-600"
                             />
                         ))}
-                        
+
                         {/* Y-axis labels */}
                         {[0, 1, 2, 3, 4].map(i => {
                             const value = maxValue - (i * valueRange / 4);
@@ -241,7 +241,7 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({ todayForecasts
                 <div className="flex flex-wrap gap-4 justify-center mt-4">
                     {chartData.map((location, index) => (
                         <div key={location.locationId} className="flex items-center space-x-2">
-                            <div 
+                            <div
                                 className="w-4 h-4 rounded-full"
                                 style={{ backgroundColor: colors[index % colors.length] }}
                             />

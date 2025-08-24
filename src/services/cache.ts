@@ -7,6 +7,7 @@ export interface CacheEntry<T> {
 export const CacheKeys = {
   currentWeather: (lat: number, lon: number) => `weather:current:${lat}:${lon}`,
   weeklyForecast: (lat: number, lon: number) => `weather:weekly:${lat}:${lon}`,
+  todayForecast: (lat: number, lon: number) => `weather:today:${lat}:${lon}`,
   historicalData: (lat: number, lon: number, months: number) => `weather:historical:${lat}:${lon}:${months}`,
   locationSearch: (query: string) => `location:search:${encodeURIComponent(query)}`,
 };

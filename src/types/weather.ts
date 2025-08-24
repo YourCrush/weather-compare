@@ -63,9 +63,24 @@ export interface HistoricalData {
   endDate: string;
 }
 
+export interface HourlyForecast {
+  time: string;
+  temperature: number;
+  humidity: number;
+  windSpeed: number;
+  precipitation: PrecipitationData;
+}
+
+export interface TodayForecast {
+  hourly: HourlyForecast[];
+  location: string;
+  timezone: string;
+}
+
 export interface WeatherData {
   current: CurrentWeather;
   weekly: WeeklyForecast;
+  today: TodayForecast;
   historical: HistoricalData;
   lastUpdated: string;
 }

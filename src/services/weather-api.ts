@@ -8,6 +8,7 @@ import {
 import {
   CurrentWeather,
   WeeklyForecast,
+  TodayForecast,
   HistoricalData,
   Location,
   PrecipitationData,
@@ -86,6 +87,60 @@ export class OpenMeteoWeatherService implements WeatherService {
       }
       throw new WeatherApiError(
         `Failed to fetch current weather: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  async getTodayForecast(lat: number, lon: number): Promise<TodayForecast> {
+    const cacheKey = CacheKeys.todayForecast(lat, lon);
+    const cached = cacheService.get<TodayForecast>(cacheKey);
+    
+    if (cached) {
+      return cached;
+    }
+
+    try {
+      const params = new URLSearchParams({
+        latitude: lat.toString(),
+        longitude: lon.toString(),
+        hourly: [
+          'temperature_2m',
+          'relative_humidity_2m',
+          'wind_speed_10m',
+          'precipitation_probability',
+          'precipitation',
+          'rain',
+          'showers',
+          'snowfall',
+        ].join(','),
+        timezone: 'auto',
+        forecast_days: '1',
+      });
+
+      const response = await this.fetchWithRetry(
+        `${this.baseUrl}/forecast?${params}`
+      );
+      
+      if (!response.ok) {
+        throw new WeatherApiError(
+          `Failed to fetch today's forecast: ${response.statusText}`,
+          response.status
+        );
+      }
+
+      const data: OpenMeteoForecastResponse = await response.json();
+      const todayForecast = this.transformTodayForecast(data);
+      
+      // Cache the result
+      cacheService.set(cacheKey, todayForecast, CacheTTL.WEEKLY_FORECAST);
+      
+      return todayForecast;
+    } catch (error) {
+      if (error instanceof WeatherApiError) {
+        throw error;
+      }
+      throw new WeatherApiError(
+        `Failed to fetch today's forecast: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
     }
   }
@@ -342,6 +397,29 @@ export class OpenMeteoWeatherService implements WeatherService {
       timestamp: current.time,
       weatherCode: current.weather_code,
       visibility: undefined, // Not available in Open-Meteo
+    };
+  }
+
+  private transformTodayForecast(data: OpenMeteoForecastResponse): TodayForecast {
+    const hourly = data.hourly;
+    const hourlyForecasts = hourly.time.map((time, index) => ({
+      time,
+      temperature: hourly.temperature_2m[index],
+      humidity: hourly.relative_humidity_2m[index],
+      windSpeed: hourly.wind_speed_10m[index],
+      precipitation: this.transformPrecipitation({
+        rain: hourly.rain?.[index] || 0,
+        showers: hourly.showers?.[index] || 0,
+        snowfall: hourly.snowfall?.[index] || 0,
+        precipitation: hourly.precipitation?.[index] || 0,
+        probability: hourly.precipitation_probability?.[index] || 0,
+      }),
+    }));
+
+    return {
+      hourly: hourlyForecasts,
+      location: `${data.latitude}, ${data.longitude}`,
+      timezone: data.timezone,
     };
   }
 

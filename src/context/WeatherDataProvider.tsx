@@ -47,10 +47,11 @@ export const WeatherDataProvider: React.FC<WeatherDataProviderProps> = ({ childr
 
     try {
       console.log('📡 Fetching current and weekly weather data...');
-      // Fetch current and weekly data (required)
-      const [current, weekly] = await Promise.all([
+      // Fetch current, weekly, and today's hourly data (required)
+      const [current, weekly, today] = await Promise.all([
         weatherService.getCurrentWeather(location.latitude, location.longitude),
         weatherService.getWeeklyForecast(location.latitude, location.longitude),
+        weatherService.getTodayForecast(location.latitude, location.longitude),
       ]);
 
       // Fetch historical data (optional - don't fail if it's not available)
