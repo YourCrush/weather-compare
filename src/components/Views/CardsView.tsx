@@ -1,8 +1,10 @@
 import React from 'react';
 import { useAppContext } from '../../context';
+import { formatTemperature, formatSpeed, formatPressure } from '../../utils/units';
 
 export const CardsView: React.FC = () => {
   const { state } = useAppContext();
+  const units = state.settings.units;
 
   if (state.locations.length === 0) {
     return (
@@ -51,10 +53,10 @@ export const CardsView: React.FC = () => {
                 <div className="space-y-4">
                   <div className="text-center">
                     <div className="text-4xl font-bold text-gray-900 dark:text-gray-100">
-                      {Math.round(current.temperature)}°C
+                      {formatTemperature(current.temperature, units)}
                     </div>
                     <div className="text-sm text-gray-500 dark:text-gray-400">
-                      Feels like {Math.round(current.feelsLike)}°C
+                      Feels like {formatTemperature(current.feelsLike, units)}
                     </div>
                   </div>
                   
@@ -68,13 +70,13 @@ export const CardsView: React.FC = () => {
                     <div className="text-center">
                       <div className="text-gray-500 dark:text-gray-400">Wind</div>
                       <div className="font-medium text-gray-900 dark:text-gray-100">
-                        {Math.round(current.windSpeed)} km/h
+                        {formatSpeed(current.windSpeed, units)}
                       </div>
                     </div>
                     <div className="text-center">
                       <div className="text-gray-500 dark:text-gray-400">Pressure</div>
                       <div className="font-medium text-gray-900 dark:text-gray-100">
-                        {Math.round(current.pressure)} hPa
+                        {formatPressure(current.pressure, units)}
                       </div>
                     </div>
                     <div className="text-center">
