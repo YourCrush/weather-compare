@@ -1,143 +1,240 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { formatTemperature, formatSpeed, formatPressure } from '../../utils/units';
 
 interface ChartData {
-  name: string;
-  temperature: number;
-  humidity: number;
-  windSpeed: number;
-  pressure: number;
+    name: string;
+    temperature: number;
+    humidity: number;
+    windSpeed: number;
+    pressure: number;
 }
 
 interface ComparisonChartProps {
-  data: ChartData[];
-  units: 'metric' | 'imperial';
+    data: ChartData[];
+    units: 'metric' | 'imperial';
 }
 
+type MetricType = 'temperature' | 'humidity' | 'windSpeed' | 'pressure';
+
 export const ComparisonChart: React.FC<ComparisonChartProps> = ({ data, units }) => {
-  // Normalize data for visualization (0-100 scale for each metric)
-  const normalizeData = (data: ChartData[]) => {
-    const tempValues = data.map(d => d.temperature);
-    const humidityValues = data.map(d => d.humidity);
-    const windValues = data.map(d => d.windSpeed);
-    const pressureValues = data.map(d => d.pressure);
+    const [activeMetric, setActiveMetric] = useState<MetricType>('temperature');
 
-    const tempMin = Math.min(...tempValues);
-    const tempMax = Math.max(...tempValues);
-    const windMin = Math.min(...windValues);
-    const windMax = Math.max(...windValues);
-    const pressureMin = Math.min(...pressureValues);
-    const pressureMax = Math.max(...pressureValues);
+    // Get metric configuration
+    const getMetricConfig = (metric: MetricType) => {
+        const configs = {
+            temperature: {
+                label: 'Temperature',
+                icon: '🌡️',
+                color: 'bg-red-500',
+                lightBg: 'bg-red-50 dark:bg-red-900/20',
+                textColor: 'text-red-700 dark:text-red-300',
+                format: (value: number) => formatTemperature(value, units),
+                getValue: (item: ChartData) => item.temperature,
+            },
+            humidity: {
+                label: 'Humidity',
+                icon: '💧',
+                color: 'bg-blue-500',
+                lightBg: 'bg-blue-50 dark:bg-blue-900/20',
+                textColor: 'text-blue-700 dark:text-blue-300',
+                format: (value: number) => `${value}%`,
+                getValue: (item: ChartData) => item.humidity,
+            },
+            windSpeed: {
+                label: 'Wind Speed',
+                icon: '🌬️',
+                color: 'bg-yellow-500',
+                lightBg: 'bg-yellow-50 dark:bg-yellow-900/20',
+                textColor: 'text-yellow-700 dark:text-yellow-300',
+                format: (value: number) => formatSpeed(value, units),
+                getValue: (item: ChartData) => item.windSpeed,
+            },
+            pressure: {
+                label: 'Pressure',
+                icon: '📊',
+                color: 'bg-purple-500',
+                lightBg: 'bg-purple-50 dark:bg-purple-900/20',
+                textColor: 'text-purple-700 dark:text-purple-300',
+                format: (value: number) => formatPressure(value, units),
+                getValue: (item: ChartData) => item.pressure,
+            },
+        };
+        return configs[metric];
+    };
 
-    return data.map(item => ({
-      ...item,
-      tempNormalized: tempMax === tempMin ? 50 : ((item.temperature - tempMin) / (tempMax - tempMin)) * 100,
-      humidityNormalized: item.humidity, // Already 0-100
-      windNormalized: windMax === windMin ? 50 : ((item.windSpeed - windMin) / (windMax - windMin)) * 100,
-      pressureNormalized: pressureMax === pressureMin ? 50 : ((item.pressure - pressureMin) / (pressureMax - pressureMin)) * 100,
-    }));
-  };
+    const currentConfig = getMetricConfig(activeMetric);
+    const values = data.map(currentConfig.getValue);
+    const maxValue = Math.max(...values);
+    const minValue = Math.min(...values);
 
-  const normalizedData = normalizeData(data);
+    return (
+        <div className="space-y-6">
+            {/* Metric Selector */}
+            <div className="flex flex-wrap gap-2 justify-center">
+                {(['temperature', 'humidity', 'windSpeed', 'pressure'] as MetricType[]).map((metric) => {
+                    const config = getMetricConfig(metric);
+                    const isActive = activeMetric === metric;
 
-  return (
-    <div className="space-y-6">
-      {/* Chart Legend */}
-      <div className="flex flex-wrap gap-4 justify-center">
-        <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 bg-red-500 rounded"></div>
-          <span className="text-sm text-gray-600 dark:text-gray-400">Temperature</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 bg-blue-500 rounded"></div>
-          <span className="text-sm text-gray-600 dark:text-gray-400">Humidity</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 bg-yellow-500 rounded"></div>
-          <span className="text-sm text-gray-600 dark:text-gray-400">Wind Speed</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 bg-purple-500 rounded"></div>
-          <span className="text-sm text-gray-600 dark:text-gray-400">Pressure</span>
-        </div>
-      </div>
-
-      {/* Stacked Bar Chart */}
-      <div className="space-y-4">
-        {normalizedData.map((item, index) => (
-          <div key={item.name} className="space-y-2">
-            <div className="flex justify-between items-center">
-              <h4 className="font-medium text-gray-900 dark:text-gray-100">{item.name}</h4>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                {formatTemperature(item.temperature, units)}
-              </div>
-            </div>
-            
-            {/* Stacked Bar */}
-            <div className="relative h-8 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
-              {/* Temperature Bar */}
-              <div 
-                className="absolute left-0 top-0 h-full bg-red-500 opacity-80 transition-all duration-500 ease-out"
-                style={{ width: `${item.tempNormalized}%` }}
-                title={`Temperature: ${formatTemperature(item.temperature, units)}`}
-              />
-              
-              {/* Humidity Bar */}
-              <div 
-                className="absolute left-0 top-1 h-6 bg-blue-500 opacity-70 transition-all duration-500 ease-out"
-                style={{ width: `${item.humidityNormalized}%` }}
-                title={`Humidity: ${item.humidity}%`}
-              />
-              
-              {/* Wind Speed Bar */}
-              <div 
-                className="absolute left-0 top-2 h-4 bg-yellow-500 opacity-80 transition-all duration-500 ease-out"
-                style={{ width: `${item.windNormalized}%` }}
-                title={`Wind: ${formatSpeed(item.windSpeed, units)}`}
-              />
-              
-              {/* Pressure Bar */}
-              <div 
-                className="absolute left-0 top-3 h-2 bg-purple-500 opacity-90 transition-all duration-500 ease-out"
-                style={{ width: `${item.pressureNormalized}%` }}
-                title={`Pressure: ${formatPressure(item.pressure, units)}`}
-              />
+                    return (
+                        <button
+                            key={metric}
+                            onClick={() => setActiveMetric(metric)}
+                            className={`
+                                flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200
+                                ${isActive
+                                    ? `${config.lightBg} ${config.textColor} shadow-sm border-2 border-current`
+                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                }
+                            `}
+                        >
+                            <span className="text-lg">{config.icon}</span>
+                            <span className="text-sm">{config.label}</span>
+                        </button>
+                    );
+                })}
             </div>
 
-            {/* Data Values */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-gray-600 dark:text-gray-400">
-              <div className="flex items-center space-x-1">
-                <div className="w-2 h-2 bg-red-500 rounded"></div>
-                <span>{formatTemperature(item.temperature, units)}</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <div className="w-2 h-2 bg-blue-500 rounded"></div>
-                <span>{item.humidity}%</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <div className="w-2 h-2 bg-yellow-500 rounded"></div>
-                <span>{formatSpeed(item.windSpeed, units)}</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <div className="w-2 h-2 bg-purple-500 rounded"></div>
-                <span>{formatPressure(item.pressure, units)}</span>
-              </div>
+            {/* Chart Title */}
+            <div className="text-center">
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center justify-center space-x-2">
+                    <span>{currentConfig.icon}</span>
+                    <span>{currentConfig.label} Comparison</span>
+                </h4>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    Compare {currentConfig.label.toLowerCase()} across all locations
+                </p>
             </div>
-          </div>
-        ))}
-      </div>
 
-      {/* Chart Insights */}
-      <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg">
-        <div className="flex items-center space-x-2 mb-2">
-          <span className="text-xl">📊</span>
-          <span className="font-medium text-gray-700 dark:text-gray-300">Chart Insights</span>
+            {/* Clean Bar Chart */}
+            <div className="space-y-4">
+                {data.map((item, index) => {
+                    const value = currentConfig.getValue(item);
+                    const percentage = maxValue === minValue ? 100 : ((value - minValue) / (maxValue - minValue)) * 100;
+                    const isHighest = value === maxValue;
+                    const isLowest = value === minValue && maxValue !== minValue;
+
+                    return (
+                        <div key={item.name} className="space-y-2">
+                            {/* Location name and value */}
+                            <div className="flex justify-between items-center">
+                                <div className="flex items-center space-x-2">
+                                    <h5 className="font-medium text-gray-900 dark:text-gray-100">
+                                        {item.name}
+                                    </h5>
+                                    {isHighest && (
+                                        <span className="px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full">
+                                            Highest
+                                        </span>
+                                    )}
+                                    {isLowest && (
+                                        <span className="px-2 py-1 text-xs font-medium bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-full">
+                                            Lowest
+                                        </span>
+                                    )}
+                                </div>
+                                <div className={`font-semibold ${currentConfig.textColor}`}>
+                                    {currentConfig.format(value)}
+                                </div>
+                            </div>
+
+                            {/* Clean horizontal bar */}
+                            <div className="relative">
+                                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                    <div
+                                        className={`h-full ${currentConfig.color} transition-all duration-700 ease-out rounded-full`}
+                                        style={{ width: `${Math.max(percentage, 8)}%` }}
+                                    />
+                                </div>
+                                {/* Value label on bar for larger screens */}
+                                <div className="absolute inset-y-0 right-2 flex items-center">
+                                    <span className="text-xs font-medium text-gray-600 dark:text-gray-300 hidden sm:block">
+                                        {percentage.toFixed(0)}%
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Summary Stats */}
+            <div className={`p-4 ${currentConfig.lightBg} rounded-lg`}>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                            Highest
+                        </div>
+                        <div className={`font-semibold ${currentConfig.textColor}`}>
+                            {currentConfig.format(maxValue)}
+                        </div>
+                    </div>
+                    <div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                            Lowest
+                        </div>
+                        <div className={`font-semibold ${currentConfig.textColor}`}>
+                            {currentConfig.format(minValue)}
+                        </div>
+                    </div>
+                    <div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                            Average
+                        </div>
+                        <div className={`font-semibold ${currentConfig.textColor}`}>
+                            {currentConfig.format(values.reduce((a, b) => a + b, 0) / values.length)}
+                        </div>
+                    </div>
+                    <div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                            Range
+                        </div>
+                        <div className={`font-semibold ${currentConfig.textColor}`}>
+                            {activeMetric === 'temperature'
+                                ? formatTemperature(Math.abs(maxValue - minValue), units).replace(/[°CF]/g, '°')
+                                : activeMetric === 'humidity'
+                                    ? `${Math.abs(maxValue - minValue).toFixed(0)}%`
+                                    : activeMetric === 'windSpeed'
+                                        ? formatSpeed(Math.abs(maxValue - minValue), units)
+                                        : formatPressure(Math.abs(maxValue - minValue), units)
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Quick comparison table */}
+            <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                    <thead>
+                        <tr className="border-b border-gray-200 dark:border-gray-700">
+                            <th className="text-left py-2 font-medium text-gray-900 dark:text-gray-100">Location</th>
+                            <th className="text-center py-2 font-medium text-gray-900 dark:text-gray-100">🌡️</th>
+                            <th className="text-center py-2 font-medium text-gray-900 dark:text-gray-100">💧</th>
+                            <th className="text-center py-2 font-medium text-gray-900 dark:text-gray-100">🌬️</th>
+                            <th className="text-center py-2 font-medium text-gray-900 dark:text-gray-100">📊</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {data.map((item) => (
+                            <tr key={item.name} className="border-b border-gray-100 dark:border-gray-800">
+                                <td className="py-2 font-medium text-gray-900 dark:text-gray-100">{item.name}</td>
+                                <td className="text-center py-2 text-gray-600 dark:text-gray-400">
+                                    {formatTemperature(item.temperature, units)}
+                                </td>
+                                <td className="text-center py-2 text-gray-600 dark:text-gray-400">
+                                    {item.humidity}%
+                                </td>
+                                <td className="text-center py-2 text-gray-600 dark:text-gray-400">
+                                    {formatSpeed(item.windSpeed, units)}
+                                </td>
+                                <td className="text-center py-2 text-gray-600 dark:text-gray-400">
+                                    {formatPressure(item.pressure, units)}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          Each bar represents a location with overlapping metrics. Longer bars indicate higher values relative to other locations.
-          Hover over the colored sections to see exact values.
-        </p>
-      </div>
-    </div>
-  );
+    );
 };
