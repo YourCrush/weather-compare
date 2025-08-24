@@ -4,19 +4,19 @@ export interface CacheEntry<T> {
   ttl: number;
 }
 
-export enum CacheKeys {
-  CURRENT_WEATHER = 'current_weather',
-  FORECAST = 'forecast',
-  HISTORICAL = 'historical',
-  GEOCODING = 'geocoding',
-}
+export const CacheKeys = {
+  currentWeather: (lat: number, lon: number) => `weather:current:${lat}:${lon}`,
+  weeklyForecast: (lat: number, lon: number) => `weather:weekly:${lat}:${lon}`,
+  historicalData: (lat: number, lon: number, months: number) => `weather:historical:${lat}:${lon}:${months}`,
+  locationSearch: (query: string) => `location:search:${encodeURIComponent(query)}`,
+};
 
-export enum CacheTTL {
-  CURRENT_WEATHER = 15, // 15 minutes
-  FORECAST = 60, // 1 hour
-  HISTORICAL = 1440, // 24 hours
-  GEOCODING = 10080, // 1 week
-}
+export const CacheTTL = {
+  CURRENT_WEATHER: 15, // 15 minutes
+  FORECAST: 60, // 1 hour
+  HISTORICAL: 1440, // 24 hours
+  GEOCODING: 10080, // 1 week
+};
 
 export class CacheService {
   private cache = new Map<string, CacheEntry<any>>();
