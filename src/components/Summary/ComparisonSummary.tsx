@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import * as React from 'react';
 import { useAppContext } from '../../context';
 import { formatTemperature, formatSpeed, formatPressure } from '../../utils/units';
 import { ComparisonChart } from '../Charts/ComparisonChart';
@@ -15,10 +15,22 @@ export const ComparisonSummary: React.FC<ComparisonSummaryProps> = ({
 }) => {
   const { state } = useAppContext();
   const units = state.settings.units;
-  const [chartViewMode, setChartViewMode] = useState<'insights' | 'chart'>('insights');
+  const [chartViewMode, setChartViewMode] = React.useState<'insights' | 'chart'>('insights');
   
   // Use the new hook to get comparison data based on view mode
   const { todayForecasts, locationNames, isLoading: comparisonLoading, error: comparisonError } = useComparisonData(viewMode, selectedDate);
+  
+  // Debug logging
+  React.useEffect(() => {
+    console.log('🎯 ComparisonSummary received:', { 
+      viewMode, 
+      selectedDate, 
+      forecastsCount: todayForecasts.size, 
+      locationNamesCount: locationNames.size,
+      comparisonLoading,
+      comparisonError
+    });
+  }, [viewMode, selectedDate, todayForecasts, locationNames, comparisonLoading, comparisonError]);
 
 
 
