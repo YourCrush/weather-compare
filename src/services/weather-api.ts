@@ -208,6 +208,52 @@ export class OpenMeteoWeatherService implements WeatherService {
     }
   }
 
+  async getHistoricalDayData(lat: number, lon: number, date: string): Promise<TodayForecast> {
+    const cacheKey = `historical_day_${lat}_${lon}_${date}`;
+    const cached = cacheService.get<TodayForecast>(cacheKey);
+    
+    if (cached) {
+      return cached;
+    }
+
+    try {
+      const params = new URLSearchParams({
+        latitude: lat.toString(),
+        longitude: lon.toString(),
+        start_date: date,
+        end_date: date,
+        hourly: [
+          'temperature_2m',
+          'relative_humidity_2m',
+          'precipitation_probability',
+          'precipitation',
+          'rain',
+          'showers',
+          'snowfall',
+          'wind_speed_10m',
+        ].join(','),
+        timezone: 'auto',
+      });
+
+      const response = await this.fetchWithRetry(
+        `${this.baseUrl}/archive?${params}`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Historical data API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const historicalData = this.transformTodayForecast(data);
+      
+      cacheService.set(cacheKey, historicalData, 24 * 60 * 60 * 1000); // Cache for 24 hours
+      return historicalData;
+    } catch (error) {
+      console.error('Error fetching historical day data:', error);
+      throw error;
+    }
+  }
+
   async getHistoricalData(lat: number, lon: number, months: number): Promise<HistoricalData> {
     const cacheKey = CacheKeys.historicalData(lat, lon, months);
     const cached = cacheService.get<HistoricalData>(cacheKey);
@@ -397,6 +443,46 @@ export class OpenMeteoWeatherService implements WeatherService {
       timestamp: current.time,
       weatherCode: current.weather_code,
       visibility: undefined, // Not available in Open-Meteo
+    };
+  }
+
+  async getWeeklyAverageData(lat: number, lon: number): Promise<TodayForecast> {
+    const weeklyData = await this.getWeeklyForecast(lat, lon);
+    
+    // Calculate hourly averages from daily data (simulate hourly data from daily averages)
+    const hourlyAverages = [];
+    
+    for (let hour = 0; hour < 24; hour++) {
+      // Calculate averages across all 7 days for this hour
+      const avgTemp = weeklyData.daily.reduce((sum, day) => 
+        sum + (day.tempMax + day.tempMin) / 2, 0) / weeklyData.daily.length;
+      
+      const avgHumidity = 65; // Approximate average humidity
+      const avgWindSpeed = weeklyData.daily.reduce((sum, day) => 
+        sum + day.windSpeed, 0) / weeklyData.daily.length;
+      
+      const avgRainChance = weeklyData.daily.reduce((sum, day) => 
+        sum + day.precipitation.probability, 0) / weeklyData.daily.length;
+      
+      hourlyAverages.push({
+        time: `2024-01-01T${hour.toString().padStart(2, '0')}:00`,
+        temperature: avgTemp,
+        humidity: avgHumidity,
+        windSpeed: avgWindSpeed,
+        precipitation: {
+          probability: avgRainChance,
+          total: 0,
+          rain: 0,
+          showers: 0,
+          snowfall: 0,
+        },
+      });
+    }
+    
+    return {
+      hourly: hourlyAverages,
+      location: weeklyData.location,
+      timezone: weeklyData.timezone,
     };
   }
 

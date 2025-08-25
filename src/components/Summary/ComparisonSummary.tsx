@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAppContext } from '../../context';
 import { formatTemperature, formatSpeed, formatPressure } from '../../utils/units';
 import { ComparisonChart } from '../Charts/ComparisonChart';
+import { useComparisonData } from '../../hooks/useComparisonData';
 
 interface ComparisonSummaryProps {
   viewMode?: 'current' | 'historical' | 'average';
@@ -15,6 +16,9 @@ export const ComparisonSummary: React.FC<ComparisonSummaryProps> = ({
   const { state } = useAppContext();
   const units = state.settings.units;
   const [chartViewMode, setChartViewMode] = useState<'insights' | 'chart'>('insights');
+  
+  // Use the new hook to get comparison data based on view mode
+  const { todayForecasts, locationNames, isLoading: comparisonLoading, error: comparisonError } = useComparisonData(viewMode, selectedDate);
 
 
 
@@ -194,17 +198,39 @@ export const ComparisonSummary: React.FC<ComparisonSummaryProps> = ({
         const mostLikelyRain = rainChances.reduce((max, curr) => curr.value > max.value ? curr : max);
         const leastLikelyRain = rainChances.reduce((min, curr) => curr.value < min.value ? curr : min);
 
-        // Prepare chart data - collect today's forecasts
-        const todayForecasts = new Map<string, any>();
-        const locationNames = new Map<string, string>();
-        
-        locationsWithData.forEach(item => {
-          const weatherData = state.weatherData.get(item.location.id);
-          if (weatherData?.today) {
-            todayForecasts.set(item.location.id, weatherData.today);
-            locationNames.set(item.location.id, item.location.name);
-          }
-        });
+        // Show loading state for comparison data
+        if (comparisonLoading) {
+          return (
+            <div className="card p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                Comparison Insights
+              </h3>
+              <div className="text-center py-8">
+                <div className="text-3xl mb-2">⏳</div>
+                <p className="text-gray-500 dark:text-gray-400">
+                  Loading {viewMode === 'average' ? '7-day average' : viewMode === 'historical' ? 'historical' : 'current'} data...
+                </p>
+              </div>
+            </div>
+          );
+        }
+
+        // Show error state
+        if (comparisonError) {
+          return (
+            <div className="card p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                Comparison Insights
+              </h3>
+              <div className="text-center py-8">
+                <div className="text-3xl mb-2">⚠️</div>
+                <p className="text-gray-500 dark:text-gray-400">
+                  {comparisonError}
+                </p>
+              </div>
+            </div>
+          );
+        }
 
         return (
           <div className="card p-6">
