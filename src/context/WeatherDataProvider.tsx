@@ -72,6 +72,7 @@ export const WeatherDataProvider: React.FC<WeatherDataProviderProps> = ({ childr
       const weatherData: WeatherData = {
         current,
         weekly,
+        today,
         historical,
         lastUpdated: new Date().toISOString(),
       };
